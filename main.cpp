@@ -8,7 +8,7 @@ size_t popcount(int);
 int factorial(int);
 int maxcombinations(int);
 bool is_power_of_two(int);
-bool work_on_table(int [], int [], short[], short [], int [], int [], bool [], int, int, std::set<std::string>&);
+bool work_on_table(int* [], int* [], short[], short [], int* [], int* [], bool [], int, int, std::set<std::string>&);
 void clear_count_table(short [], int);
 std::string stringify(int, int, int);
 
@@ -30,23 +30,22 @@ inline bool is_power_of_two(int x)
 {
   return (x < 0)? 0 : ( (x & (x - 1)) == 0 );    //return true for n = 0, function should never receive 0
 }
-bool work_on_table(int TABLE_PRIM[],int TABLE_SEC [], short COUNT_PRIM [], short COUNT_SEC [],
-                   int DIFFERENCE_PRIM[], int DIFFERENCE_SEC[], bool MARKER[], int rows, int cols,
+bool work_on_table(int* TABLE_PRIM[],int* TABLE_SEC [], short COUNT_PRIM [], short COUNT_SEC [],
+                   int* DIFFERENCE_PRIM[], int* DIFFERENCE_SEC[], bool MARKER[], int rows, int cols,
                    std::set<std::string>& minterms_string_set)
 {
   bool done = true;
   for(int i = 0; i < rows - 1; i++)
     for(int j = 0; j < COUNT_PRIM[i]; j++)
       for(int z = 0; z < COUNT_PRIM[i+1]; z++)
-      if ( is_power_of_two( TABLE_PRIM[(i+1)*cols + z] - TABLE_PRIM[i*cols + j]) && DIFFERENCE_PRIM[i*cols + j] == DIFFERENCE_PRIM[(i+1)*cols + z])
+      if ( is_power_of_two( TABLE_PRIM[i+1][z] - TABLE_PRIM[i][j]) && DIFFERENCE_PRIM[i][j] == DIFFERENCE_PRIM[i+1][z])
       {
         done = false;
         MARKER[i*cols + j] = 1;
         MARKER[(i+1)*cols + z] = 1;
-        DIFFERENCE_SEC[i*cols + COUNT_SEC[i]] = DIFFERENCE_PRIM[i * cols + j] - TABLE_PRIM[i*cols + j] + TABLE_PRIM[(i+1)*cols + z];
-        TABLE_SEC[i*cols + COUNT_SEC[i]] = TABLE_PRIM[i*cols + j] & TABLE_PRIM[(i+1)*cols + z]; //might be wrong
+        DIFFERENCE_SEC[i][COUNT_SEC[i]] = DIFFERENCE_PRIM[i][j] - TABLE_PRIM[i][j] + TABLE_PRIM[i+1][z];
+        TABLE_SEC[i][COUNT_SEC[i]] = TABLE_PRIM[i][j] & TABLE_PRIM[i+1][z]; //might be wrong
         ++COUNT_SEC[i];
-        //std::cout << TABLE_SEC[2*cols+6] <<"****";
       }
   //for(int i = 0; i < rows; i++)
   //{
@@ -56,12 +55,12 @@ bool work_on_table(int TABLE_PRIM[],int TABLE_SEC [], short COUNT_PRIM [], short
   //  }
   //  std::cout << std::endl;
   //}
-  for(int i = 0; i < rows - 1; i++)   //Initialize marker array to 0
+  for(int i = 0; i < rows - 1; i++)
     for(int j = 0; j < COUNT_PRIM[i]; j++)
       if (MARKER[i * cols + j] == 0)
-        minterms_string_set.insert(stringify( TABLE_PRIM[i*cols + j], DIFFERENCE_PRIM[i*cols + j], rows - 1 ));
+        minterms_string_set.insert(stringify( TABLE_PRIM[i][j], DIFFERENCE_PRIM[i][j], rows - 1 ));
 
-  for(int i = 0; i < rows - 1; i++)   //Initialize marker array to 0
+  for(int i = 0; i < rows - 1; i++)
     for(int j = 0; j < COUNT_SEC[i]; j++)
       MARKER[i * cols + j] = 0;
 
@@ -96,7 +95,7 @@ std::string stringify(int lhs, int rhs, int size)
   std::string x = "";
   std::bitset<4> A(lhs);
   std::bitset<4> B(rhs);
-  std::cout <<A <<" " <<B <<std::endl;
+  //std::cout <<A <<" " <<B <<std::endl;
   for(int i = size - 1 ; i >= 0; i--)
     if( A[i] == 0 && B[i] == 1)
       x.append(1, '-');
@@ -104,19 +103,19 @@ std::string stringify(int lhs, int rhs, int size)
       x.append(1, '1');
     else if (A[i] == 0)
       x.append(1, '0');
-  std::cout <<"x = " << x << std::endl;
+  //std::cout <<"x = " << x << std::endl;
   return x;
 }
 
 
 int main()
 {
-  int* TABLE_1;
-  int* TABLE_2;
+  int** TABLE_1;
+  int** TABLE_2;
   short* COUNT_TABLE_1;
   short* COUNT_TABLE_2;
-  int* DIFFERENCE_BITS_1;
-  int* DIFFERENCE_BITS_2;
+  int** DIFFERENCE_BITS_1;
+  int** DIFFERENCE_BITS_2;
   bool* MARKER;
   int rows;
   int cols;
@@ -144,12 +143,21 @@ int main()
   cols = (num_of_vars > 1 )? maxcombinations(num_of_vars) : 1;
 
 
-  TABLE_1 = new int [rows * cols];
-  TABLE_2 = new int [rows * cols];
+  TABLE_1 = new int* [rows];
+  TABLE_2 = new int* [rows];
   COUNT_TABLE_1 = new short [rows];
   COUNT_TABLE_2 = new short [rows];
-  DIFFERENCE_BITS_1 = new int [rows * cols];
-  DIFFERENCE_BITS_2 = new int [rows * cols];
+  DIFFERENCE_BITS_1 = new int* [rows];
+  DIFFERENCE_BITS_2 = new int* [rows];
+
+  for(int i = 0; i < rows; ++i)
+  {
+    TABLE_1[i] = new int [cols];
+    TABLE_2[i] = new int [cols];
+    DIFFERENCE_BITS_1[i] = new int [cols];
+    DIFFERENCE_BITS_2[i] = new int [cols];
+  }
+
   MARKER = new bool [rows * cols];
 
   clear_count_table(COUNT_TABLE_1, rows);
@@ -161,7 +169,7 @@ int main()
       std::cout << "Wrong input, number must be between 0 and " << pow(2, num_of_vars) <<", try again\n> ";
 
     popcount_val = popcount(input_minterm);
-    TABLE_1[popcount_val * cols + COUNT_TABLE_1[popcount_val]] = input_minterm;
+    TABLE_1[popcount_val][COUNT_TABLE_1[popcount_val]] = input_minterm;
     //std::cout << TABLE_1[popcount_val * cols + COUNT_TABLE_1[popcount_val]]<< "   ";
     ++COUNT_TABLE_1[popcount_val];
   }
@@ -169,8 +177,8 @@ int main()
   for(int i = 0; i < rows; i++)   //Initialize marker array to 0
     for(int j = 0; j < COUNT_TABLE_1[i]; j++)
     {
-      DIFFERENCE_BITS_1[i * cols + j] = 0;
-      DIFFERENCE_BITS_2[i * cols + j] = 0;
+      DIFFERENCE_BITS_1[i][j] = 0;
+      DIFFERENCE_BITS_2[i][j] = 0;
       MARKER[i * cols + j] = 0;
     }
 
@@ -201,11 +209,18 @@ int main()
   for( std::string prime : minterms_string_set)
     std::cout <<prime <<std::endl;
 
+for(int i = 0; i < rows; ++i)
+{
+    delete [] TABLE_1[i];
+    delete [] TABLE_2[i];
+    delete [] DIFFERENCE_BITS_1;
+    delete [] DIFFERENCE_BITS_2;
+}
 
 delete [] TABLE_1;
 delete [] TABLE_2;
 delete [] DIFFERENCE_BITS_1;
-delete [] DIFFERENCE_BITS_2;
+delete [] DIFFERENCE_BITS_1;
 delete [] MARKER;
 delete [] COUNT_TABLE_1;
 delete [] COUNT_TABLE_2;
