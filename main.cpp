@@ -93,8 +93,8 @@ void clear_count_table(short COUNT_TABLE[], int rows)
 std::string stringify(int lhs, int rhs, int size)
 {
   std::string x = "";
-  std::bitset<4> A(lhs);
-  std::bitset<4> B(rhs);
+  std::bitset<16> A(lhs);
+  std::bitset<16> B(rhs);
   //std::cout <<A <<" " <<B <<std::endl;
   for(int i = size - 1 ; i >= 0; i--)
     if( A[i] == 0 && B[i] == 1)
