@@ -213,14 +213,14 @@ for(int i = 0; i < rows; ++i)
 {
     delete [] TABLE_1[i];
     delete [] TABLE_2[i];
-    delete [] DIFFERENCE_BITS_1;
-    delete [] DIFFERENCE_BITS_2;
+    delete [] DIFFERENCE_BITS_1[i];
+    delete [] DIFFERENCE_BITS_2[i];
 }
 
 delete [] TABLE_1;
 delete [] TABLE_2;
 delete [] DIFFERENCE_BITS_1;
-delete [] DIFFERENCE_BITS_1;
+delete [] DIFFERENCE_BITS_2;
 delete [] MARKER;
 delete [] COUNT_TABLE_1;
 delete [] COUNT_TABLE_2;
