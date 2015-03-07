@@ -21,7 +21,7 @@ inline int factorial(int x)
 }
 inline int maxcombinations(int x)
 {
-  return factorial(x) / ( factorial(x / 2) * factorial (x - x / 2) );
+  return factorial(x) / ( factorial(x / 2) * factorial (x - x / 2) ) * 2;
 }
 inline size_t popcount(int x)
 {
@@ -121,7 +121,7 @@ std::string valuefy (std::string source, std::string out)
 {
   bool flag = true;
   std::string temp = "";
-  for(int i = 0; i < source.length(); i++)
+  for(size_t i = 0; i < source.length(); i++)
     if (source[i] == '-')
     {
       flag = false;
@@ -136,17 +136,17 @@ std::string valuefy (std::string source, std::string out)
     return out;
   }
 
-  for(int i = 0; i < source.length(); i++)
+  for(size_t i = 0; i < source.length(); i++)
   {
     if (source[i] == '-')
     {
       std::string temp1 = temp;
       temp.append(1, '0');
-        for(int j = i + 1; j < source.length(); j++)
+        for(size_t j = i + 1; j < source.length(); j++)
           temp.append(1, source[j]);
       out = (valuefy(temp, out));
       temp1.append(1, '1');
-      for(int j = i + 1; j < source.length(); j++)
+      for(size_t j = i + 1; j < source.length(); j++)
           temp1.append(1, source[j]);
       out = (valuefy(temp1, out));
       return out;
@@ -156,8 +156,7 @@ std::string valuefy (std::string source, std::string out)
 }
 
 
-int main()
-{
+int main(){
   int** TABLE_1;
   int** TABLE_2;
   short* COUNT_TABLE_1;
@@ -279,18 +278,19 @@ int main()
     alternate = !alternate;
   }
 
-  for( std::string prime : minterms_string_set)
+  //for( std::string prime : minterms_string_set)
+  //{
+  //  std::string output ="";
+  //  std::cout <<valuefy(prime, output) << std::endl;
+  //}
+
+  for(int i = 0; i < rows; ++i)
   {
-    std::string output ="";
-    std::cout <<valuefy(prime, output) << std::endl;
-  }
-for(int i = 0; i < rows; ++i)
-{
     delete [] TABLE_1[i];
     delete [] TABLE_2[i];
     delete [] DIFFERENCE_BITS_1[i];
     delete [] DIFFERENCE_BITS_2[i];
-}
+  }
 
 delete [] TABLE_1;
 delete [] TABLE_2;
