@@ -31,7 +31,7 @@ int main()
 	cout<<"Press any key to continue.";
 	getch();
 	cout<<endl<<endl;
-	A = new int*[N];
+	A = new int*[N];        //Memory leak here
 	for (int y = 0;y<N;y++)
 		A[y] = new int[N];
 	createCoverageChart();
@@ -50,7 +50,7 @@ int main()
 
 int setElementExists(int minTerm)		//This function checks if the element exists
 {
-	for (int i = 0; i<N;i++)
+	for (int i = 0; i<N;i++)        //N is size of set_elementStrArr not set_elements
 		if (minTerm == set_elements[i]) return i;
 
 	return -1;
@@ -106,7 +106,7 @@ void drawCoverageChart()				//draw the chart
 
 
 // Function that removes rows and Coloumns that has prime essential implicants
-void RemoveEssn()
+void RemoveEssn()       //only removes cols with single x, don't work otherwise
 {
 	bool found;
 	for(int c=0; c<N; c++)
