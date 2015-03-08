@@ -1,6 +1,7 @@
 #include <iostream>
 #include <bitset>
 #include <string>
+#include <sstream>
 #include <cmath>
 #include <unordered_set>
 #include <vector>
@@ -126,17 +127,18 @@ void createCoverageChart(int* A[],int B[], std::string set_elementStrArr[], int 
 
   for(int i=0; i < n; i++)
   {
-    set_elementStr = set_elementStrArr[i];
-		for (int k = 0; k<set_elementStr.length(); k++) 
+    std::stringstream stream(set_elementStrArr[i]);
+    std::string temp;
+    while (true)
     {
-			if (set_elementStr.at(k) == ',')
-        continue;
-			set_element = stoi(&set_elementStr.at(k));
-
-			index = setElementExists(B, col, set_element) ;
-      //cout << "set_elemet: " <<set_element <<" i: " << i <<" index: " <<index <<endl;
-			if (index != -1) 
-				A[i][index] = 1;
+      stream >> temp;
+      if(!stream)
+        break;
+      set_element = stoi(temp);
+	    index = setElementExists(B, col, set_element) ;
+    //cout << "set_elemet: " <<set_element <<" i: " << i <<" index: " <<index <<endl;
+	  if (index != -1) 
+		  A[i][index] = 1;
     }
   }
 }
@@ -185,38 +187,62 @@ bool removeCol(std::vector<int> &results, int* A[], int row, int col)
 
   if (rV.size() == 0)
     return false;
-  std::cout <<"COL!!!!\n";
-  drawCoverageChart(A, row, col);
-  for (int i = 0; i< rV.size(); i++)
+  //std::cout <<"COL!!!!\n";
+  //drawCoverageChart(A, row, col);
+  for (size_t i = 0; i< rV.size(); i++)
   {
-    for(int j = 0; j < col; j ++)
+    for(size_t j = 0; j < col; j ++)
     {
       if ( A[ rV[i] ][j] == 1)
         cV.push_back(j);
       A[ rV[i] ][j] = 0;
     }
   }
-  for(int j = 0; j < cV.size(); j++)
-			for(int i=0; i<row; i++)
+  for(size_t j = 0; j < cV.size(); j++)
+			for(size_t i=0; i<row; i++)
 				A[i][cV[j]] = 0;
 
-  for(int i = 0; i < rV.size(); i++)
-    results.push_back(rV[i]);
+  std::unordered_set<int> temp;
+
+  for(size_t i = 0; i < rV.size(); i++)
+    temp.insert(rV[i]);
+  for(auto x : temp)
+    results.push_back(x);
 
   return true;
 }
 
 bool removeDomCol(std::vector<int> &results, int* A[], int row, int col)
 {
-  bool flag;
-  for (int j = 0; j < col; j++)
+  std::vector<int> counter(col);
+  std::vector<int>::iterator it;
+  int index;
+  int Max_num;
+  for(int j = 0; j < col; j++)
   {
+    counter[j] = 0;
+    for (int i = 0; i < row; i++)
+      if(A[i][j] == 1)
+        counter[j]++;
+  }
+  bool flag;
+  while (!counter.empty())
+  {
+    it = std::max_element(counter.begin(), counter.end());
+    index = std::distance(counter.begin(), it);
+    Max_num = counter[index];
+    //std::cout << "MAx NUM : " <<Max_num;
+    counter.erase(it);
+
     flag = false;
     for (int i = 0; i < row ; i++)
     {
-      if (A[i][j] == 1)
+      if (A[i][index] == 1)
       {
-        for(int k = j + 1; k < col; k++)
+        for(int k = 0; k < col; k++)
+        {
+          if(k == index)
+            continue;
           if(A[i][k] == 1)
           {
             flag = true;
@@ -224,16 +250,17 @@ bool removeDomCol(std::vector<int> &results, int* A[], int row, int col)
           }
           else
             flag = false;
+        }
         if (!flag)
           break;
       }
     }
     if (flag)
     {
-      std::cout <<"DOM COL!!!!\n";
-      drawCoverageChart(A, row, col);
+      //std::cout <<"DOM COL!!!!\n";
+      //drawCoverageChart(A, row, col);
       for (int i = 0; i < row; i++)
-        A[i][j] = 0;
+        A[i][index] = 0;
       return true;
     }
   }
@@ -251,12 +278,12 @@ bool removeRow(std::vector<int> &results, int* A[], int row, int col)
         counter++;
     if (counter == 1)
       {
-        std::cout <<"ROW!!!!\n";
-        drawCoverageChart(A, row, col);
+        //std::cout <<"ROW!!!!\n";
+        //drawCoverageChart(A, row, col);
         for(int j = 0; j < col; j++)
           A[i][j] = 0;
-        std::cout <<"AFTER ROW!!!!\n";
-        drawCoverageChart(A, row, col);
+        //std::cout <<"AFTER ROW!!!!\n";
+        //drawCoverageChart(A, row, col);
         return true;
       }
     }
@@ -303,7 +330,7 @@ std::string valuefy (std::string source, std::string out)
   {
     int x = stoi(source,nullptr, 2);
     out.append(std::to_string(x));
-    out.append(1, ',');
+    out.append(1, ' ');
     return out;
   }
 
@@ -460,12 +487,14 @@ int main() {
 
   set_elementStrArr = new std::string [minterms_string_set.size()];
   element_dashes = new std::string [minterms_string_set.size()];
+
   for (std::string prime : minterms_string_set)
   {
     output ="";
-    std::cout << prime;
+    //std::cout << prime;
     element_dashes[i] = prime;
     set_elementStrArr[i] = valuefy(prime, output);
+    //std::cout << set_elementStrArr[i] <<std::endl;
     ++i;
   }
 
@@ -476,20 +505,40 @@ int main() {
     TABLE_3[i] = new int [num_of_minterms];
 
   createCoverageChart(TABLE_3, MINTERMS_ARRAY, set_elementStrArr, minterms_string_set.size(), num_of_minterms);
-  drawCoverageChart(TABLE_3, minterms_string_set.size(), num_of_minterms);
+  //drawCoverageChart(TABLE_3, minterms_string_set.size(), num_of_minterms);
 
   bool not_done = true;
 
   while (not_done)
     not_done = removeCol(results, TABLE_3,minterms_string_set.size(),num_of_minterms)
-            || removeRow(results, TABLE_3,minterms_string_set.size(),num_of_minterms)
-            || removeDomCol(results, TABLE_3,minterms_string_set.size(),num_of_minterms);
+            || removeDomCol(results, TABLE_3,minterms_string_set.size(),num_of_minterms)
+            || removeRow(results, TABLE_3,minterms_string_set.size(),num_of_minterms);
 
-  drawCoverageChart(TABLE_3, minterms_string_set.size(), num_of_minterms);
-
+  //drawCoverageChart(TABLE_3, minterms_string_set.size(), num_of_minterms);
+  std::cout <<"F = ";
+  char ch = 65;
+  std::string x;
   for (int result : results)
-    std::cout <<element_dashes[result] <<std::endl;
+  {
+    ch = 65;
+    x = element_dashes[result];
+    for(int i = 0; i < x.length(); i++)
+    {
+      if ( x[i] == '1' )
+        std::cout << ch;
+      else if ( x[i] == '0')
+        std::cout << ch <<"'";
+      else
+      {
+        ch++;
+        continue;
+      }
+      ch++;
+    }
+    std::cout <<" + ";
+  }
 
+  std::cout <<std::endl;
   for(int i = 0; i < rows; ++i)
   {
     delete [] TABLE_1[i];
