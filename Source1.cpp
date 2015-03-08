@@ -10,19 +10,18 @@ int** A;
 vector <int> rV;
 vector <int> cV;
 
-/*
-Below are examples of the set ON elements and the minterms produced 
-
-*/
 int set_elements[] = {4,5,6,8,9,10,13};
 string set_elementStrArr[] = {"0,4", "0,8", "8,9", "8,10", "9,13", "4,5,6,7", "5,7,13,15"};
-int N = (int)sizeof(set_elementStrArr)/sizeof(string);
+int N = (int)sizeof(set_elementStrArr) / sizeof(string);
 
 
 void createCoverageChart();
 void drawCoverageChart();
 void RemoveEssn();
 void Extract();
+bool removeCol();
+bool removeDomCol();
+bool removeRow();
 
 
 int main()
@@ -31,7 +30,7 @@ int main()
 	cout<<"Press any key to continue.";
 	getch();
 	cout<<endl<<endl;
-	A = new int*[N];        //Memory leak here
+	A = new int*[N];        //N*N? works only in this case
 	for (int y = 0;y<N;y++)
 		A[y] = new int[N];
 	createCoverageChart();
@@ -45,13 +44,17 @@ int main()
 	RemoveEssn();
 	drawCoverageChart();
 
+  for (int y = 0;y<N;y++)
+		delete [] A[y];
+  delete [] A;
+
 	return 0;
 }
 
 int setElementExists(int minTerm)		//This function checks if the element exists
 {
 	for (int i = 0; i<N;i++)        //N is size of set_elementStrArr not set_elements
-		if (minTerm == set_elements[i]) return i;
+		if (set_elements[i] == minTerm ) return i;
 
 	return -1;
 }
@@ -63,6 +66,7 @@ void createCoverageChart()				//Creating the chart with all minterms given
 	char set_element;
 	string set_elementStr;
 	set_elementStr = set_elementStrArr[x];			//loop of all minterms divided in the array
+  int index;
 	while (x < (n-1)) {
 		
 		for(int i=0; i<N; i++)
@@ -72,17 +76,16 @@ void createCoverageChart()				//Creating the chart with all minterms given
 				if (set_elementStr.at(k) == ',') continue;
 				set_element = atoi(&set_elementStr.at(k));
 
-				int index = setElementExists(set_element) ;
+				index = setElementExists(set_element) ;
 				if (index != -1) {
 					A[i][index] = 1;
 				}
-				else A[i][index] = 0;
+				else A[i][index] = 0;       //?????? index is -1 here which causes heap corruption
 			}
 			x = x + 1;
-			if (x==n) break;
+			if (x==n) break;    //why?
 			set_elementStr = set_elementStrArr[x];
 			cout<<"("<<set_elementStr<<") ";
-			
 		}
 	}
 
@@ -108,6 +111,9 @@ void drawCoverageChart()				//draw the chart
 // Function that removes rows and Coloumns that has prime essential implicants
 void RemoveEssn()       //only removes cols with single x, don't work otherwise
 {
+  bool done = false;
+  while (!done)
+    done = removeCol() || removeDomCol() || removeRow();
 	bool found;
 	for(int c=0; c<N; c++)
 	{
@@ -150,33 +156,3 @@ void RemoveEssn()       //only removes cols with single x, don't work otherwise
 				A[r][cV[c]]=0;
 		}
 	}
-
-
-
-// Function not built correct. Ignore it.
-/*
-void Extract()
-{
-	bool found;
-	for(int c=0; c<N; c++)
-	{
-		found=false;
-		for(int r=0; r<N; r++)
-			{
-				if (A[r][c]==1)
-					{
-						if (!found)
-						{
-							L.push_back(c);
-							found = true;
-						}
-						else 
-							L.pop_back();break;
-				}
-		}
-	}
-	cout<<" Remaining: ";
-		for(int c=0; c<L.size(); c++)
-			cout<<L[c]<<" ";
-}
-*/
