@@ -420,7 +420,7 @@ int main() {
 
   MINTERMS_ARRAY = new int [num_of_minterms];
 
-  std::cout <<"Please enter you minterms (in decimal)\n> ";
+  std::cout <<"Please enter your minterms (in decimal)\n> ";
 
   for(int i = 0; i < num_of_minterms; i++)    //Assumes no duplicates are inserted
   {
@@ -513,6 +513,8 @@ int main() {
     not_done = removeCol(results, TABLE_3,minterms_string_set.size(),num_of_minterms)
             || removeDomCol(results, TABLE_3,minterms_string_set.size(),num_of_minterms)
             || removeRow(results, TABLE_3,minterms_string_set.size(),num_of_minterms);
+              
+            
 
   //drawCoverageChart(TABLE_3, minterms_string_set.size(), num_of_minterms);
   std::cout <<"F = ";
