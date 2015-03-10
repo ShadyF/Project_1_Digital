@@ -5,21 +5,21 @@
 #include <cmath>
 #include <unordered_set>
 #include <vector>
-#include <algorithm>
 
+int setElementExists(int [], int, int);
 size_t popcount(int);
 unsigned long maxcombinations( unsigned long);
 bool is_power_of_two(int);
 bool work_on_table(int* [], int* [], short[], short [], int* [], int* [], bool [], int, int, std::unordered_set<std::string>&);
-void clear_count_table(short [], int);
-std::string stringify(int, int, int);
-std::string valuefy(std::string, std::string);
-void createCoverageChart(int* [],int [], std::string [], int, int);
-int setElementExists(int [], int, int);    //why int not bool?
-//void RemoveEssn(std::vector<int>, std::vector<int>, int* [], int, int num_of_minterms);
 bool removeCol(std::vector<int>&, int* [], int, int);
 bool removeDomCol(std::vector<int>&, int* [], int, int);
 bool removeRow(std::vector<int>&, int* [], int, int);
+void clear_count_table(short [], int);
+void createCoverageChart(int* [],int [], std::string [], int, int);
+std::string stringify(int, int, int);
+std::string valuefy(std::string, std::string);
+
+
 
 //return max number of combinations of 1 that could possibly exist in a single row
 //eg. for 4 bit binary number, max num of combinations is 6, which means cols of 2D array have to be bigger than 6
@@ -58,7 +58,7 @@ bool work_on_table(int* TABLE_PRIM[],int* TABLE_SEC [], short COUNT_PRIM [], sho
   for(int i = 0; i < rows - 1; i++)
     for(int j = 0; j < COUNT_PRIM[i]; j++)
       for(int z = 0; z < COUNT_PRIM[i+1]; z++)
-      if ( is_power_of_two( TABLE_PRIM[i+1][z] - TABLE_PRIM[i][j]) && DIFFERENCE_PRIM[i][j] == DIFFERENCE_PRIM[i+1][z])   //two nums power of 2 and have same difference bits
+      if ( is_power_of_two( TABLE_PRIM[i+1][z] - TABLE_PRIM[i][j]) && DIFFERENCE_PRIM[i][j] == DIFFERENCE_PRIM[i+1][z])   //difference between two nums is power of 2 and have same difference bits
       {
         done = false;
         MARKER[i*cols + j] = 1;   //marks both nums
@@ -67,15 +67,6 @@ bool work_on_table(int* TABLE_PRIM[],int* TABLE_SEC [], short COUNT_PRIM [], sho
         TABLE_SEC[i][COUNT_SEC[i]] = TABLE_PRIM[i][j] & TABLE_PRIM[i+1][z]; // inserts new num in second table, with the dashes replaced with 0's
         ++COUNT_SEC[i];
       }
-
-  //for(int i = 0; i < rows; i++)
-  //{
-  //  for(int j = 0; j < COUNT_PRIM[i]; j++)
-  //  {
-  //    std::cout << MARKER[(i*cols) + j]<< "  ";
-  //  }
-  //  std::cout << std::endl;
-  //}
 
   for(int i = 0; i < rows - 1; i++)
     for(int j = 0; j < COUNT_PRIM[i]; j++)
@@ -87,24 +78,6 @@ bool work_on_table(int* TABLE_PRIM[],int* TABLE_SEC [], short COUNT_PRIM [], sho
   for(int i = 0; i < rows - 1; i++)
     for(int j = 0; j < COUNT_SEC[i]; j++)
       MARKER[i * cols + j] = 0;   //clears marker array
-  
-  //for(int i = 0; i < rows; i++)   //Initialize marker array to 0
-  //{
-  //  for(int j = 0; j < COUNT_SEC[i]; j++)
-  //  {
-  //    std::cout << TABLE_SEC[i][j]<< "  ";
-  //  }
-  //  std::cout << std::endl;
-  //}
-
-  //for(int i = 0; i < rows; i++)   //Initialize marker array to 0
-  //{
-  //  for(int j = 0; j < COUNT_SEC[i]; j++)
-  //  {
-  //    std::cout << DIFFERENCE_SEC[i][j]<< "  ";
-  //  }
-  //  std::cout << std::endl;
-  //}
 
   return done;
 
@@ -142,14 +115,11 @@ void createCoverageChart(int* A[],int B[], std::string set_elementStrArr[], int 
         break;
       set_element = stoi(temp);
 	    index = setElementExists(B, col, set_element) ;
-    //cout << "set_elemet: " <<set_element <<" i: " << i <<" index: " <<index <<endl;
 	  if (index != -1) 
 		  A[i][index] = 1;
     }
   }
 }
-      //cout <<"i: "<<endl;
-			//cout<<"("<<set_elementStr<<") ";
 
 void drawCoverageChart(int* A[], int row, int col)				//draw the chart
 {
@@ -193,8 +163,6 @@ bool removeCol(std::vector<int> &results, int* A[], int row, int col)
 
   if (rV.size() == 0)
     return false;
-  //std::cout <<"COL!!!!\n";
-  //drawCoverageChart(A, row, col);
   for (size_t i = 0; i< rV.size(); i++)
   {
     for(size_t j = 0; j < col; j ++)
@@ -220,36 +188,62 @@ bool removeCol(std::vector<int> &results, int* A[], int row, int col)
 
 bool removeDomCol(std::vector<int> &results, int* A[], int row, int col)
 {
-  std::vector<int> counter(col);
-  std::vector<int>::iterator it;
-  int index;
-  int Max_num;
+  bool flag = false;
+  for(int i = 0; i < row; i++)
+    for(int j = 0; j < col; j++)
+      if (A[i][j] == 1)
+        flag = true;
+
+  if (!flag)
+    return false;
+
+  int k = 0;
   for(int j = 0; j < col; j++)
   {
-    counter[j] = 0;
-    for (int i = 0; i < row; i++)
-      if(A[i][j] == 1)
-        counter[j]++;
-  }
-  bool flag;
-  while (!counter.empty())
-  {
-    it = std::max_element(counter.begin(), counter.end());
-    index = std::distance(counter.begin(), it);
-    Max_num = counter[index];
-    //std::cout << "MAx NUM : " <<Max_num;
-    counter.erase(it);
-
-    flag = false;
-    for (int i = 0; i < row ; i++)
+    for(int i = 0; i < row; i++)
     {
-      if (A[i][index] == 1)
+      k = 0;
+      while( k < col)
       {
-        for(int k = 0; k < col; k++)
+        if (k == j)
         {
-          if(k == index)
-            continue;
-          if(A[i][k] == 1)
+          k++;
+        }
+        else if (A[i][j] == 0 && A[i][k] == 1)
+        {
+          flag = false;
+          break;
+        }
+        else k++;
+      }
+      if(!flag)
+        break;
+    }
+
+    if(flag)
+    {
+      for(int i = 0; i < row; i++)
+        A[i][j] = 0;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool removeRow(std::vector<int> &results, int* A[], int row, int col)
+{
+  bool flag;
+  for (int i = 0; i < row; i++)
+  {
+    flag = false;
+    for (int j = 0; j < col ; j++)
+    {
+      if (A[i][j] == 1)
+      {
+        for(int k = 0; k < row; k++)
+        {
+          if( k == i) continue;
+          if(A[k][j] == 1)
           {
             flag = true;
             break;
@@ -263,36 +257,13 @@ bool removeDomCol(std::vector<int> &results, int* A[], int row, int col)
     }
     if (flag)
     {
-      //std::cout <<"DOM COL!!!!\n";
+      //std::cout <<"ROW!!!\n";
       //drawCoverageChart(A, row, col);
-      for (int i = 0; i < row; i++)
-        A[i][index] = 0;
+      for (int j = 0; j < col; j++)
+        A[i][j] = 0;
       return true;
     }
   }
-  return false;
-}
-
-bool removeRow(std::vector<int> &results, int* A[], int row, int col)
-{
-  short counter;
-  for (int i = 0; i < row; i++)
-  {
-    counter = 0;
-    for(int j = 0; j < col; j++)
-      if (A[i][j] == 1)
-        counter++;
-    if (counter == 1)
-      {
-        //std::cout <<"ROW!!!!\n";
-        //drawCoverageChart(A, row, col);
-        for(int j = 0; j < col; j++)
-          A[i][j] = 0;
-        //std::cout <<"AFTER ROW!!!!\n";
-        //drawCoverageChart(A, row, col);
-        return true;
-      }
-    }
   return false;
 }
 
@@ -311,8 +282,6 @@ std::string stringify(int lhs, int rhs, int size)
   std::bitset<16> A(lhs);
   std::bitset<16> B(rhs);
 
-  //std::cout <<A <<" " <<B <<std::endl;
-
   for(int i = size - 1 ; i >= 0; i--)
     if( A[i] == 0 && B[i] == 1)
       x.append(1, '-');
@@ -320,8 +289,6 @@ std::string stringify(int lhs, int rhs, int size)
       x.append(1, '1');
     else if (A[i] == 0)
       x.append(1, '0');
-
-  //std::cout <<"x = " << x << std::endl;
   return x;
 }
 
@@ -372,13 +339,13 @@ int main() {
   int** TABLE_1;    //primary table for first phase
   int** TABLE_2;    //secondary table for first phase
   int** TABLE_3;    //primary table for second phase
-  int** DIFFERENCE_BITS_1;
-  int** DIFFERENCE_BITS_2;
+  int** DIFFERENCE_BITS_1;    //stores difference bits or 'dashes' for table 1
+  int** DIFFERENCE_BITS_2;    //stores difference bits or 'dashes' for table 2
   int* MINTERMS_ARRAY;    //stores the minterms
-  std::string * element_dashes;
-  short* COUNT_TABLE_1;
-  short* COUNT_TABLE_2;
+  short* COUNT_TABLE_1;   //counter for table 1
+  short* COUNT_TABLE_2;   //counter for table 2
   bool* MARKER;
+  std::string * element_dashes;
 
   int rows;
   unsigned long int cols;
@@ -388,15 +355,18 @@ int main() {
   short num_of_vars;
   short num_of_minterms;
   short num_of_dont_cares;
+  char ch = 65;
   bool done = false;
+  bool not_done = true;
   bool alternate = false;
   size_t popcount_val;
   std::unordered_set<std::string> minterms_string_set;
   std::string* set_elementStrArr;
   std::string output;
+  std::string x;
   std::vector <int> results;
 
-  std::cout << "Quine McKluskey\n";
+  std::cout << "Quine-McCluskey\n\n";
 
   std::cout << "Enter number of variables\n> ";
   while (std::cin >> num_of_vars && (num_of_vars < 1 || num_of_vars > 16))
@@ -428,14 +398,14 @@ int main() {
 
   std::cout << "How many Minterms?\n> ";
   while (std::cin >> num_of_minterms && (num_of_minterms <= 0 || num_of_minterms > pow(2, num_of_vars)) )
-    std::cout << "Number of Minterms must be bigger than 0, try again\n> ";
+    std::cout << "Number of Minterms must be bigger than 0 and less than " <<pow(2, num_of_vars) <<" , try again\n> ";
 
   MINTERMS_ARRAY = new int [num_of_minterms];
 
   std::cout <<"Please enter your minterms (in decimal)\n> ";
 
-  //Inserts minterms to the primary table
-  for(int i = 0; i < num_of_minterms; i++)    //Assumes no duplicates are inserted
+  //Inserts minterms to the primary table, assumes no duplicates are inserted
+  for(int i = 0; i < num_of_minterms; i++)
   {
     while (std::cin >> input_minterm && (input_minterm < 0 || input_minterm > pow(2, num_of_vars) ))
       std::cout << "Wrong input, number must be between 0 and " << pow(2, num_of_vars) <<", try again\n> ";
@@ -473,16 +443,6 @@ int main() {
       MARKER[i * cols + j] = 0;
     }
 
-
-  //for(int i = 0; i < rows; i++)   //Initialize marker array to 0
-  //{
-  //  for(int j = 0; j < COUNT_TABLE_1[i]; j++)
-  //  {
-  //    std::cout << TABLE_1[(i*cols) + j]<< "  ";
-  //  }
-  //  std::cout << std::endl;
-  //}
-
   //while not done, work on the table while alternating between the two primary and secondary ones
   while (!done)
   {
@@ -502,39 +462,29 @@ int main() {
   set_elementStrArr = new std::string [minterms_string_set.size()];
   element_dashes = new std::string [minterms_string_set.size()];
 
+  //valuefy every prime in minterms_string_set
   for (std::string prime : minterms_string_set)
   {
     output ="";
-    //std::cout << prime;
     element_dashes[i] = prime;
     set_elementStrArr[i] = valuefy(prime, output);
-    //std::cout << set_elementStrArr[i] <<std::endl;
     ++i;
   }
 
-  //std::sort(set_elementStrArr, set_elementStrArr + minterms_string_set.size());
-
+  //Initialise table 3
   TABLE_3 = new int* [minterms_string_set.size()];
   for(int i = 0; i < minterms_string_set.size(); ++i)
     TABLE_3[i] = new int [num_of_minterms];
 
   //creates the table for phase 2
   createCoverageChart(TABLE_3, MINTERMS_ARRAY, set_elementStrArr, minterms_string_set.size(), num_of_minterms);
-  //drawCoverageChart(TABLE_3, minterms_string_set.size(), num_of_minterms);
-
-  bool not_done = true;
 
   while (not_done)
     not_done = removeCol(results, TABLE_3,minterms_string_set.size(),num_of_minterms)
             || removeDomCol(results, TABLE_3,minterms_string_set.size(),num_of_minterms)
             || removeRow(results, TABLE_3,minterms_string_set.size(),num_of_minterms);
               
-            
-
-  //drawCoverageChart(TABLE_3, minterms_string_set.size(), num_of_minterms);
   std::cout <<"F = ";
-  char ch = 65;
-  std::string x;
   for (int result : results)    //Prints out the function
   {
     ch = 65;    // A = 65
@@ -554,8 +504,11 @@ int main() {
     }
     std::cout <<" + ";
   }
+  std::cout <<'\b' <<'\b' << " ";   //erases leftover + at the end
 
   std::cout <<std::endl;
+
+  //deletes dynamically allocated arrays
   for(int i = 0; i < rows; ++i)
   {
     delete [] TABLE_1[i];
