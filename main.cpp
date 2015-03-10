@@ -8,8 +8,7 @@
 #include <algorithm>
 
 size_t popcount(int);
-int factorial(int);
-int maxcombinations(int);
+unsigned long maxcombinations( unsigned long);
 bool is_power_of_two(int);
 bool work_on_table(int* [], int* [], short[], short [], int* [], int* [], bool [], int, int, std::unordered_set<std::string>&);
 void clear_count_table(short [], int);
@@ -22,28 +21,35 @@ bool removeCol(std::vector<int>&, int* [], int, int);
 bool removeDomCol(std::vector<int>&, int* [], int, int);
 bool removeRow(std::vector<int>&, int* [], int, int);
 
-//return factorial of a number
-inline int factorial(int x)
+//return max number of combinations of 1 that could possibly exist in a single row
+//eg. for 4 bit binary number, max num of combinations is 6, which means cols of 2D array have to be bigger than 6
+//just for safety (hence the * 2 at the return statement
+inline unsigned long maxcombinations(unsigned long x)
 {
-  return (x == 1 ? x : x * factorial( x - 1 ));
+  unsigned long k = x / 2;
+  unsigned long n = x;
+  unsigned  long r = 1;
+  for (unsigned  long d = 1; d <= k; ++d) {
+        r *= n--;
+        r /= d;
+    }
+  return r * 2;
 }
 
-inline int maxcombinations(int x)
-{
-  return factorial(x) / ( factorial(x / 2) * factorial (x - x / 2) ) * 2;
-}
-
+//return number of 1's in a number's binary representation
 inline size_t popcount(int x)
 {
   std::bitset<16> A(x);
   return A.count();
 }
 
+//checks if number is a power of two
 inline bool is_power_of_two(int x)
 {
   return (x < 0)? 0 : ( (x & (x - 1)) == 0 );    //return true for n = 0, function should never receive 0
 }
 
+//Works on a column from table 1 and puts unmarked primes in to minsterms_string_set
 bool work_on_table(int* TABLE_PRIM[],int* TABLE_SEC [], short COUNT_PRIM [], short COUNT_SEC [],
                    int* DIFFERENCE_PRIM[], int* DIFFERENCE_SEC[], bool MARKER[], int rows, int cols,
                    std::unordered_set<std::string>& minterms_string_set)
@@ -52,13 +58,13 @@ bool work_on_table(int* TABLE_PRIM[],int* TABLE_SEC [], short COUNT_PRIM [], sho
   for(int i = 0; i < rows - 1; i++)
     for(int j = 0; j < COUNT_PRIM[i]; j++)
       for(int z = 0; z < COUNT_PRIM[i+1]; z++)
-      if ( is_power_of_two( TABLE_PRIM[i+1][z] - TABLE_PRIM[i][j]) && DIFFERENCE_PRIM[i][j] == DIFFERENCE_PRIM[i+1][z])
+      if ( is_power_of_two( TABLE_PRIM[i+1][z] - TABLE_PRIM[i][j]) && DIFFERENCE_PRIM[i][j] == DIFFERENCE_PRIM[i+1][z])   //two nums power of 2 and have same difference bits
       {
         done = false;
-        MARKER[i*cols + j] = 1;
-        MARKER[(i+1)*cols + z] = 1;
-        DIFFERENCE_SEC[i][COUNT_SEC[i]] = DIFFERENCE_PRIM[i][j] - TABLE_PRIM[i][j] + TABLE_PRIM[i+1][z];
-        TABLE_SEC[i][COUNT_SEC[i]] = TABLE_PRIM[i][j] & TABLE_PRIM[i+1][z]; //[1] might be wrong - [2] it's correct
+        MARKER[i*cols + j] = 1;   //marks both nums
+        MARKER[(i+1)*cols + z] = 1;   //marks both nums
+        DIFFERENCE_SEC[i][COUNT_SEC[i]] = DIFFERENCE_PRIM[i][j] - TABLE_PRIM[i][j] + TABLE_PRIM[i+1][z];    //stores difference bits between the two nums
+        TABLE_SEC[i][COUNT_SEC[i]] = TABLE_PRIM[i][j] & TABLE_PRIM[i+1][z]; // inserts new num in second table, with the dashes replaced with 0's
         ++COUNT_SEC[i];
       }
 
@@ -75,12 +81,12 @@ bool work_on_table(int* TABLE_PRIM[],int* TABLE_SEC [], short COUNT_PRIM [], sho
     for(int j = 0; j < COUNT_PRIM[i]; j++)
       if (MARKER[i * cols + j] == 0)
       {
-        minterms_string_set.insert( stringify( TABLE_PRIM[i][j], DIFFERENCE_PRIM[i][j], rows - 1 ) );
+        minterms_string_set.insert( stringify( TABLE_PRIM[i][j], DIFFERENCE_PRIM[i][j], rows - 1 ) );   //inserts unmarked primes to the result sets
       }
 
   for(int i = 0; i < rows - 1; i++)
     for(int j = 0; j < COUNT_SEC[i]; j++)
-      MARKER[i * cols + j] = 0;
+      MARKER[i * cols + j] = 0;   //clears marker array
   
   //for(int i = 0; i < rows; i++)   //Initialize marker array to 0
   //{
@@ -106,7 +112,7 @@ bool work_on_table(int* TABLE_PRIM[],int* TABLE_SEC [], short COUNT_PRIM [], sho
 
 int setElementExists(int set_elements [], int N, int minTerm)		//This function checks if the element exists
 {
-	for (int i = 0; i<N;i++)        //N is size of set_elementStrArr not set_elements
+	for (int i = 0; i<N;i++)
 		if (set_elements[i] == minTerm ) return i;
 
 	return -1;
@@ -289,12 +295,16 @@ bool removeRow(std::vector<int> &results, int* A[], int row, int col)
     }
   return false;
 }
+
+//clears count table
 void clear_count_table(short COUNT_TABLE[], int rows)
 {
   for (int i = 0; i < rows; i++)
     COUNT_TABLE[i] = 0;
 }
 
+//if two nums are adjacent, replaces the differece between them with dashes and stores them as a string
+//i.e for 1001 and 1000, output is 100-
 std::string stringify(int lhs, int rhs, int size)
 {
   std::string x = "";
@@ -315,6 +325,8 @@ std::string stringify(int lhs, int rhs, int size)
   return x;
 }
 
+//Turns a binary num with dashes in it to the possible values it can have
+//eg. 0-0- has possible values of 0, 1, 4, 5
 std::string valuefy (std::string source, std::string out)
 {
   bool flag = true;
@@ -357,19 +369,19 @@ std::string valuefy (std::string source, std::string out)
 int main() {
 
   //Main Tables for phase 1
-  int** TABLE_1;
-  int** TABLE_2;
-  int** TABLE_3;
+  int** TABLE_1;    //primary table for first phase
+  int** TABLE_2;    //secondary table for first phase
+  int** TABLE_3;    //primary table for second phase
   int** DIFFERENCE_BITS_1;
   int** DIFFERENCE_BITS_2;
-  int* MINTERMS_ARRAY;
+  int* MINTERMS_ARRAY;    //stores the minterms
   std::string * element_dashes;
   short* COUNT_TABLE_1;
   short* COUNT_TABLE_2;
   bool* MARKER;
 
   int rows;
-  int cols;
+  unsigned long int cols;
   int input_minterm;    //should be combined to single input var;
   int input_dont_care;  //should be combined to single input var;
   int i = 0;
@@ -422,6 +434,7 @@ int main() {
 
   std::cout <<"Please enter your minterms (in decimal)\n> ";
 
+  //Inserts minterms to the primary table
   for(int i = 0; i < num_of_minterms; i++)    //Assumes no duplicates are inserted
   {
     while (std::cin >> input_minterm && (input_minterm < 0 || input_minterm > pow(2, num_of_vars) ))
@@ -470,6 +483,7 @@ int main() {
   //  std::cout << std::endl;
   //}
 
+  //while not done, work on the table while alternating between the two primary and secondary ones
   while (!done)
   {
     if(!alternate)
@@ -504,6 +518,7 @@ int main() {
   for(int i = 0; i < minterms_string_set.size(); ++i)
     TABLE_3[i] = new int [num_of_minterms];
 
+  //creates the table for phase 2
   createCoverageChart(TABLE_3, MINTERMS_ARRAY, set_elementStrArr, minterms_string_set.size(), num_of_minterms);
   //drawCoverageChart(TABLE_3, minterms_string_set.size(), num_of_minterms);
 
@@ -520,9 +535,9 @@ int main() {
   std::cout <<"F = ";
   char ch = 65;
   std::string x;
-  for (int result : results)
+  for (int result : results)    //Prints out the function
   {
-    ch = 65;
+    ch = 65;    // A = 65
     x = element_dashes[result];
     for(int i = 0; i < x.length(); i++)
     {
