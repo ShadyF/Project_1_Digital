@@ -11,7 +11,7 @@ size_t popcount(int);
 unsigned long maxcombinations( unsigned long);
 bool is_power_of_two(int);
 bool work_on_table(int* [], int* [], short[], short [], int* [], int* [], bool [], int, int, std::unordered_set<std::string>&);
-bool removeCol(std::vector<int>&, int* [], int, int);
+bool removeCol(std::vector<int>&,std::vector<int>&, int* [], int, int);
 bool removeDomCol(std::vector<int>&, int* [], int, int);
 bool removeRow(std::vector<int>&, int* [], int, int);
 void clear_count_table(short [], int);
@@ -139,8 +139,9 @@ void drawCoverageChart(int* A[], int row, int col)				//draw the chart
 	}
 }
 
-bool removeCol(std::vector<int> &results, int* A[], int row, int col)
+bool removeCol(std::vector<int> &results,std::vector<int>& essential_vector, int* A[], int row, int col)
 {
+  static bool essential = true;
   bool found;
   std::vector <int> rV;
   std::vector <int> cV;
@@ -183,6 +184,13 @@ bool removeCol(std::vector<int> &results, int* A[], int row, int col)
   for(auto x : temp)
     results.push_back(x);
 
+  if(essential)
+  {
+    essential = false;
+    std::cout << "Essential Prime Implicants: ";
+    for(auto x : results)
+      essential_vector.push_back(x);
+  }
   return true;
 }
 
@@ -365,6 +373,7 @@ int main() {
   std::string output;
   std::string x;
   std::vector <int> results;
+  std::vector <int> essential_vector;
 
   std::cout << "Quine-McCluskey\n\n";
 
@@ -480,11 +489,15 @@ int main() {
   createCoverageChart(TABLE_3, MINTERMS_ARRAY, set_elementStrArr, minterms_string_set.size(), num_of_minterms);
 
   while (not_done)
-    not_done = removeCol(results, TABLE_3,minterms_string_set.size(),num_of_minterms)
+    not_done = removeCol(results,essential_vector, TABLE_3,minterms_string_set.size(),num_of_minterms)
             || removeDomCol(results, TABLE_3,minterms_string_set.size(),num_of_minterms)
             || removeRow(results, TABLE_3,minterms_string_set.size(),num_of_minterms);
-              
-  std::cout <<"F = ";
+  
+
+  for(int result : essential_vector)
+    std::cout<<element_dashes[result] <<" ";
+
+  std::cout <<"\n\nF = ";
   for (int result : results)    //Prints out the function
   {
     ch = 65;    // A = 65
